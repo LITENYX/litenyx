@@ -43,7 +43,7 @@ static constexpr uint64_t Q64_32_ONE = 1ULL << Q64_32_FRAC_BITS; // 1.0 in Q64.3
 
 // MAX values for clamping
 static constexpr uint64_t MAX_U32_32 = 0xFFFFFFFFFFFFFFFFULL; // Q32.32 MAX
-static constexpr uint64_t MAX_U64_32 = 0xFFFFFFFFFFFFFFFFULL; // Q64.32 MAX (stored as uint64_t for simplicity)
+static constexpr __uint128_t MAX_U64_32 = (static_cast<__uint128_t>(0xFFFFFFFFFFFFFFFFULL) << 32) | 0xFFFFFFFFULL; // Q64.32 MAX (96-bit: 64 integer + 32 fraction)
 
 // ---- Q32.32 Type -------------------------------------------------------------
 
@@ -140,12 +140,13 @@ struct Q64_32 {
     // Constants
     static constexpr Q64_32 ZERO() { return from_bits(0); }
     static constexpr Q64_32 ONE() { return from_bits(static_cast<__uint128_t>(1) << Q64_32_FRAC_BITS); }
-    static constexpr Q64_32 MAX() { return from_bits(static_cast<__uint128_t>(MAX_U64_32)); }
+    static constexpr Q64_32 MAX() { return from_bits(MAX_U64_32); }
 
     // Arithmetic operations (all truncate/floor)
     constexpr Q64_32 operator+(Q64_32 rhs) const {
         __uint128_t result = bits + rhs.bits;
         if (result < bits) result = MAX_U64_32; // overflow clamp
+        else if (result > MAX_U64_32) result = MAX_U64_32; // exceed max clamp
         return from_bits(result);
     }
 
@@ -158,10 +159,14 @@ struct Q64_32 {
     // Uses 192-bit intermediate (approximated with __uint128_t and overflow handling)
     constexpr Q64_32 operator*(Q32_32 rhs) const {
         // Q64.32 × Q32.32 = (bits_64 × bits_32) >> 32
-        // bits_64 is 96-bit, bits_32 is 64-bit, product is 160-bit
-        // We need to handle this carefully to avoid overflow
+        // bits_64 is up to 96-bit, bits_32 is up to 64-bit, product up to 160-bit
+        // We detect overflow before multiplying to avoid UB
         __uint128_t a = bits;
         __uint128_t b = static_cast<__uint128_t>(rhs.bits);
+        if (b == 0) return ZERO();
+        // Overflow check: if a > UINT128_MAX / b, product overflows __uint128_t
+        __uint128_t max_a = (~static_cast<__uint128_t>(0)) / b;
+        if (a > max_a) return MAX(); // product overflows, result exceeds MAX
         __uint128_t product = a * b;
         // Shift right by 32 to get Q64.32 result (truncate)
         __uint128_t result = product >> Q64_32_FRAC_BITS;
@@ -176,10 +181,25 @@ struct Q64_32 {
         __uint128_t a = bits;
         __uint128_t b = static_cast<__uint128_t>(rhs.bits);
         // Shift left by 32 to get Q64.32 result
+        // a << 32 is safe because a <= MAX_U64_32 ≈ 2^96 and a << 32 ≈ 2^128
         __uint128_t quotient = (a << Q64_32_FRAC_BITS) / b;
         // Clamp to MAX if overflow
         if (quotient > MAX_U64_32) quotient = MAX_U64_32;
         return from_bits(quotient);
+    }
+
+    // Division: Q64.32 / Q64.32 → Q32.32
+    // Used for ratios like H_attackable / H_network
+    constexpr Q32_32 div_to_q32(Q64_32 rhs) const {
+        if (rhs.bits == 0) return Q32_32::MAX(); // division by zero → MAX (pessimistic)
+        __uint128_t a = bits;
+        __uint128_t b = rhs.bits;
+        // Shift left by 32 to get Q32.32 result
+        // a << 32 is safe because a <= MAX_U64_32 ≈ 2^96 and a << 32 ≈ 2^128
+        __uint128_t quotient = (a << Q32_32_FRAC_BITS) / b;
+        // Clamp to MAX if overflow
+        if (quotient > MAX_U32_32) quotient = MAX_U32_32;
+        return Q32_32::from_bits(static_cast<uint64_t>(quotient));
     }
 
     // Comparison

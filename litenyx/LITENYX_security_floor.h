@@ -127,10 +127,10 @@ struct AlphaInput {
 // Returns Q32_32 result, clamped to MAX_U32.32 on overflow
 inline Q32_32 calculate_alpha(const AlphaInput& input) {
     // Step 1: Divide: H_attackable^bound / H_network → Q32.32, truncate
-    Q32_32 h_ratio = input.h_attackable / input.h_network;
+    Q32_32 h_ratio = input.h_attackable.div_to_q32(input.h_network);
 
     // Step 2: Divide: V_T / B_fork → Q32.32, truncate
-    Q32_32 v_ratio = input.v_t / input.b_fork;
+    Q32_32 v_ratio = input.v_t.div_to_q32(input.b_fork);
 
     // Step 3: Multiply: result1 × result2 → Q64.64, truncate to Q32.32
     Q32_32 result = h_ratio * v_ratio;
