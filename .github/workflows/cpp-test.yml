@@ -40,7 +40,7 @@ jobs:
         run: |
           cd deploy/external/dogecoin
           ./autogen.sh
-          ./configure --without-gui --disable-tests --disable-bench --with-incompatible-bdb
+          ./configure --without-gui --disable-tests --disable-bench --disable-wallet --with-incompatible-bdb
 
       - name: Run full C++ test suite
         run: make -C deploy cpp-test 2>&1 | tee ci-output.txt
