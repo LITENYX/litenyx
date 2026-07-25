@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ make libboost-test-dev
+          sudo apt-get install -y g++ make libboost-test-dev autoconf automake libtool pkg-config bsdmainutils libevent-dev libssl-dev
 
       - name: Record environment
         run: |
@@ -35,6 +35,12 @@ jobs:
 
       - name: Clone Dogecoin (pinned v1.14.9)
         run: make -C deploy clone-dogecoin
+
+      - name: Configure Dogecoin (for bitcoin-config.h)
+        run: |
+          cd deploy/external/dogecoin
+          ./autogen.sh
+          ./configure --without-gui --disable-tests --disable-bench --with-incompatible-bdb
 
       - name: Run full C++ test suite
         run: make -C deploy cpp-test 2>&1 | tee ci-output.txt
