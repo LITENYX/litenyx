@@ -34,10 +34,10 @@ jobs:
           cat ci-evidence.txt
 
       - name: Clone Dogecoin (pinned v1.14.9)
-        run: make clone-dogecoin
+        run: make -C deploy clone-dogecoin
 
       - name: Run full C++ test suite
-        run: make cpp-test 2>&1 | tee ci-output.txt
+        run: make -C deploy cpp-test 2>&1 | tee ci-output.txt
         env:
           CXX: g++
 
