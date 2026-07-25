@@ -1,0 +1,55 @@
+name: Security Floor Golden Vectors
+
+on:
+  push:
+    branches: [main, phase7-draining-authority]
+
+jobs:
+  golden-vectors:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ libboost-test-dev
+
+      - name: Record environment
+        run: |
+          echo "=== CI ENVIRONMENT ===" > ci-evidence.txt
+          echo "Runner: $(uname -a)" >> ci-evidence.txt
+          echo "G++: $(g++ --version | head -1)" >> ci-evidence.txt
+          echo "Boost: $(dpkg -l | grep libboost-test | awk '{print $3}')" >> ci-evidence.txt
+          echo "Commit: ${{ github.sha }}" >> ci-evidence.txt
+          echo "Branch: ${{ github.ref_name }}" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "======================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Compile and run security floor golden vector tests
+        run: |
+          cd deploy
+          make sf-test 2>&1 | tee ../ci-output.txt
+
+      - name: Record results
+        if: always()
+        run: |
+          echo "=== CI RESULTS ===" >> ci-evidence.txt
+          echo "Exit code: $?" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "===================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-vector-evidence-${{ github.sha }}
+          path: |
+            ci-evidence.txt
+            ci-output.txt
+          retention-days: 90

@@ -1,0 +1,61 @@
+name: C++ Test Suite
+
+on:
+  push:
+    branches: [main, phase7-draining-authority]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cpp-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make libboost-test-dev
+
+      - name: Record environment
+        run: |
+          echo "=== CI ENVIRONMENT ===" >> ci-evidence.txt
+          echo "Runner: $(uname -a)" >> ci-evidence.txt
+          echo "G++: $(g++ --version | head -1)" >> ci-evidence.txt
+          echo "Make: $(make --version | head -1)" >> ci-evidence.txt
+          echo "Boost: $(dpkg -l | grep libboost-test | awk '{print $3}')" >> ci-evidence.txt
+          echo "Commit: ${{ github.sha }}" >> ci-evidence.txt
+          echo "Branch: ${{ github.ref_name }}" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "======================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Clone Dogecoin (pinned v1.14.9)
+        run: make clone-dogecoin
+
+      - name: Run full C++ test suite
+        run: make cpp-test 2>&1 | tee ci-output.txt
+        env:
+          CXX: g++
+
+      - name: Record results
+        if: always()
+        run: |
+          echo "=== CI RESULTS ===" >> ci-evidence.txt
+          echo "Exit code: $?" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "===================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-evidence-${{ github.sha }}
+          path: |
+            ci-evidence.txt
+            ci-output.txt
+          retention-days: 90
