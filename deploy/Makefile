@@ -39,6 +39,20 @@ KERRNYX_DRAIN_SRC = $(REPO_ROOT)/cpp_reference/test/test_litenyx_draining_author
 KERRNYX_DRAIN_BIN = $(REPO_ROOT)/cpp_reference/test/test_litenyx_draining_authority
 KERRNYX_DELTA_SRC = $(REPO_ROOT)/cpp_reference/test/test_litenyx_shared_delta.cpp
 KERRNYX_DELTA_BIN = $(REPO_ROOT)/cpp_reference/test/test_litenyx_shared_delta
+# ICF-1D: Galactic Work Carrier evidence collection (M1-M6)
+KERRNYX_ICF1D_SRC = $(REPO_ROOT)/cpp_reference/test/test_icf1d_carrier.cpp
+KERRNYX_ICF1D_BIN = $(REPO_ROOT)/cpp_reference/test/test_icf1d_carrier
+KERRNYX_IW2_SRC = $(REPO_ROOT)/cpp_reference/test/test_iw2_verifier.cpp
+KERRNYX_IW2_BIN = $(REPO_ROOT)/cpp_reference/test/test_iw2_verifier
+KERRNYX_CRYPTO_SUPPORT = $(DOGECOIN_DIR)/src/crypto/scrypt.cpp \
+                          $(DOGECOIN_DIR)/src/crypto/hmac_sha256.cpp \
+                          $(DOGECOIN_DIR)/src/crypto/sha256.cpp
+# WORK-ADAPTER-ENG-1: Executable adapter conformance (49 tests)
+KERRNYX_WAENG1_SRC = $(REPO_ROOT)/cpp_reference/test/test_work_adapter_eng1.cpp
+KERRNYX_WAENG1_BIN = $(REPO_ROOT)/cpp_reference/test/test_work_adapter_eng1
+# Phase 1: Security floor golden vector tests
+KERRNYX_SF_SRC = $(REPO_ROOT)/cpp_reference/test/test_security_floor_golden.cpp
+KERRNYX_SF_BIN = $(REPO_ROOT)/cpp_reference/test/test_security_floor_golden
 # INT-OPEN-1 / M3 real-class KAT links the REAL LITENYX_sharedstate.cpp (which
 # depends on dogecoin uint256 / base_blob::SetHex) plus the minimum real dogecoin
 # support translation units. These are NOT models/mocks — they are the vendored
@@ -220,8 +234,55 @@ cpp-test:
 		-lpthread $(BOOST_TEST) && \
 		echo "Running Litenyx shared-delta unit test (INT-OPEN-1 / M3)..." && \
 		$(KERRNYX_DELTA_BIN)
+	@echo "Compiling Phase 1 security floor golden vector tests..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(KERRNYX_SF_SRC) \
+		-o $(KERRNYX_SF_BIN) \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running Phase 1 security floor golden vector tests..." && \
+		$(KERRNYX_SF_BIN) --log_level=test_suite
 cpp-compile-check:
 	@echo "Litenyx consensus is header-only integer math; no float check required."
+
+# ICF-1D: Galactic Work Carrier evidence (M1-M6)
+icf1d-test:
+	@echo "Compiling ICF-1D evidence test (M1-M6)..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(KERRNYX_ICF1D_SRC) $(KERRNYX_CRYPTO_SUPPORT) \
+		-o $(KERRNYX_ICF1D_BIN) \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running ICF-1D evidence test..." && \
+		$(KERRNYX_ICF1D_BIN) --log_level=test_suite
+
+# IW2: ValidParentWorkCarrier_G verifier (BB0-BB7)
+iw2-test:
+	@echo "Compiling IW2 verifier test (BB0-BB7)..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(KERRNYX_IW2_SRC) $(KERRNYX_CRYPTO_SUPPORT) \
+		-o $(KERRNYX_IW2_BIN) \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running IW2 verifier test..." && \
+		$(KERRNYX_IW2_BIN) --log_level=test_suite
+
+# WORK-ADAPTER-ENG-1: Executable adapter conformance (49 tests)
+waeng1-test:
+	@echo "Compiling WORK-ADAPTER-ENG-1 test (49 tests)..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(KERRNYX_WAENG1_SRC) $(KERRNYX_CRYPTO_SUPPORT) \
+		-o $(KERRNYX_WAENG1_BIN) \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running WORK-ADAPTER-ENG-1 test..." && \
+		$(KERRNYX_WAENG1_BIN) --log_level=test_suite
+
+# Phase 1: Security floor golden vector tests (9 golden vectors)
+sf-test:
+	@echo "Compiling Phase 1 security floor golden vector tests..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(KERRNYX_SF_SRC) \
+		-o $(KERRNYX_SF_BIN) \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running Phase 1 security floor golden vector tests..." && \
+		$(KERRNYX_SF_BIN) --log_level=test_suite
 
 # Run the Python regtest harness (Phase 1 gate: single-chain mine/transact/reorg).
 regtest-test:
