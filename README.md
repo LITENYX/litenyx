@@ -1,5 +1,7 @@
 # Litenyx
 
+> **Current-authority notice (2026-07-24):** this repository contains historical constitutional/experimental material. Before treating an older `LOCKED`, `FROZEN`, `MANDATORY`, or `CONSTITUTIONAL` statement as current architecture, read `docs/CURRENT_AUTHORITY.md`. Historical labels do not independently establish current authority; relaxability does not imply removal.
+
 **Experimental protocol proving ground — built on Dogecoin Core 1.14.9.**
 
 Litenyx extends Dogecoin with topology, delta state, and geographic reward research. It is an

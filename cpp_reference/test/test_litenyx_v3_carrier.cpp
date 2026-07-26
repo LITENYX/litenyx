@@ -1,4 +1,4 @@
-// Litenyx Phase 5 standalone proof — V3 aux-carrier serialization (spec §6.1).
+// Litenyx Phase 5/7 standalone proof — V3/V4 aux-carrier serialization (spec §6.1 / §4.4.1).
 //
 // Step 3 of §13 sequencing. Proves the V3 wire carrier WITHOUT any ConnectBlock
 // hook. The consensus authority is the frozen KAT in spec §6.1, itself produced
@@ -6,16 +6,17 @@
 // test asserts the C++ serialization reproduces that reference BYTE-FOR-BYTE.
 //
 // Properties asserted:
-//   V1 wire framing purely additive: V1=56B, V2=88B, V3=120B; magic is the sole
-//     discriminator; the shared prefix after magic is byte-identical across
-//     versions (V1/V2 branches unchanged; V3 = exact V2 88B prefix + 32B).
+//   V1 wire framing purely additive: V1=56B, V2=88B, V3=120B, V4=128B; magic is
+//     the sole discriminator; the shared prefix after magic is byte-identical
+//     across versions (V1/V2 branches unchanged; V3 = V2 88B + 32B; V4 = V3 120B + 8B).
 //   V2 two independent, non-overlapping, domain-LESS commitments:
 //     topologyCommitment == TopologyStateHash(T_h),
 //     lifecycleCommitment == LifecycleStateHash(L_h); neither includes the other.
 //   V3 GENESIS KAT: serialized V3 stream and its SHA256d equal the frozen §6.1
 //     values, using the engine's own commitment functions.
-//   V4 presence predicates are STRUCTURAL: HasTopologyCommitment()==V2||V3,
-//     HasLifecycleCommitment()==V3, HasKnownMagic()==V1||V2||V3.
+//   V4 presence predicates are STRUCTURAL: HasTopologyCommitment()==V2||V3||V4,
+//     HasLifecycleCommitment()==V3||V4, HasDrainCommitment()==V4,
+//     HasKnownMagic()==V1||V2||V3||V4. Wire framing V4=128B with exact V3 prefix.
 
 #include <litenyx/LITENYX_auxpow.h>
 #include <litenyx/LITENYX_types.h>
@@ -57,10 +58,14 @@ static std::vector<unsigned char> ModelSerializeAux(const LitenyxAuxHeader& h) {
     Put256(v, h.auxAnchor);
     PutU64(v, h.splitVector);
     PutU32(v, h.reserved);
-    if (h.magic == LITENYX_AUX_MAGIC_V2 || h.magic == LITENYX_AUX_MAGIC_V3)
+    if (h.magic == LITENYX_AUX_MAGIC_V2 || h.magic == LITENYX_AUX_MAGIC_V3 || h.magic == LITENYX_AUX_MAGIC_V4)
         Put256(v, h.topologyCommitment);
-    if (h.magic == LITENYX_AUX_MAGIC_V3)
+    if (h.magic == LITENYX_AUX_MAGIC_V3 || h.magic == LITENYX_AUX_MAGIC_V4)
         Put256(v, h.lifecycleCommitment);
+    if (h.magic == LITENYX_AUX_MAGIC_V4) {
+        PutU32(v, h.drainChainId);
+        PutU32(v, h.drainStartHeight);
+    }
     return v;
 }
 static const size_t kAuxPrefixLen = 56;
@@ -148,27 +153,70 @@ BOOST_AUTO_TEST_CASE(v3_genesis_kat)
     BOOST_CHECK(tail == v3.lifecycleCommitment);
 }
 
-// V4: presence predicates are structural.
+// V4: presence predicates are structural, including V4 drain commitment.
 BOOST_AUTO_TEST_CASE(v4_structural_presence_predicates)
 {
     LitenyxAuxHeader v1; v1.SetNull(); v1.SetMagicV1();
     LitenyxAuxHeader v2; v2.SetNull(); v2.SetMagicV2();
     LitenyxAuxHeader v3; v3.SetNull(); v3.SetMagicV3();
+    LitenyxAuxHeader v4; v4.SetNull(); v4.SetMagicV4();
 
-    BOOST_CHECK(v1.HasKnownMagic() && v2.HasKnownMagic() && v3.HasKnownMagic());
+    BOOST_CHECK(v1.HasKnownMagic() && v2.HasKnownMagic() && v3.HasKnownMagic() && v4.HasKnownMagic());
 
     BOOST_CHECK(!v1.HasTopologyCommitment());
     BOOST_CHECK(v2.HasTopologyCommitment());
     BOOST_CHECK(v3.HasTopologyCommitment());
+    BOOST_CHECK(v4.HasTopologyCommitment());
 
     BOOST_CHECK(!v1.HasLifecycleCommitment());
     BOOST_CHECK(!v2.HasLifecycleCommitment());
     BOOST_CHECK(v3.HasLifecycleCommitment());
+    BOOST_CHECK(v4.HasLifecycleCommitment());
+
+    BOOST_CHECK(!v1.HasDrainCommitment());
+    BOOST_CHECK(!v2.HasDrainCommitment());
+    BOOST_CHECK(!v3.HasDrainCommitment());
+    BOOST_CHECK(v4.HasDrainCommitment());
 
     // Zero commitment is PRESENT (structural), not absence.
     LitenyxAuxHeader z; z.SetNull(); z.SetMagicV3();
     BOOST_CHECK(z.HasLifecycleCommitment());
     BOOST_CHECK(z.lifecycleCommitment.IsNull());
+}
+
+// V4: wire framing — V4 = V3 prefix + 8-byte DrainCommitment = 128 bytes.
+BOOST_AUTO_TEST_CASE(v4_wire_framing)
+{
+    LitenyxAuxHeader v3; v3.SetNull(); v3.SetMagicV3(); v3.chainId = 1;
+    v3.topologyCommitment =
+        LitenyxExpectedTopologyCommitment(LitenyxTopologyState::Genesis());
+    {
+        LitenyxChainIdLifecycleState L0 = LitenyxChainIdLifecycleGenesis();
+        LitenyxLifecycleStateHash(L0, v3.lifecycleCommitment.begin());
+    }
+    auto b3 = ModelSerializeAux(v3);
+    BOOST_CHECK_EQUAL(b3.size(), (size_t)120);
+
+    LitenyxAuxHeader v4; v4.SetNull(); v4.SetMagicV4(); v4.chainId = 1;
+    v4.topologyCommitment =
+        LitenyxExpectedTopologyCommitment(LitenyxTopologyState::Genesis());
+    {
+        LitenyxChainIdLifecycleState L0 = LitenyxChainIdLifecycleGenesis();
+        LitenyxLifecycleStateHash(L0, v4.lifecycleCommitment.begin());
+    }
+    v4.drainChainId = 1;
+    v4.drainStartHeight = 1000;
+    auto b4 = ModelSerializeAux(v4);
+    BOOST_CHECK_EQUAL(b4.size(), (size_t)128);
+
+    // V4's first 120 bytes are EXACTLY V3 (minus the magic word).
+    for (size_t i = 4; i < 120; ++i) BOOST_CHECK_EQUAL(b3[i], b4[i]);
+
+    // Last 8 bytes are the raw DrainCommitment.
+    uint32_t dcid = b4[120] | (b4[121] << 8) | (b4[122] << 16) | (b4[123] << 24);
+    uint32_t dsh  = b4[124] | (b4[125] << 8) | (b4[126] << 16) | (b4[127] << 24);
+    BOOST_CHECK_EQUAL(dcid, 1u);
+    BOOST_CHECK_EQUAL(dsh, 1000u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -45,6 +45,9 @@ static constexpr uint32_t LITENYX_AUX_MAGIC_V2 = 0x4C595932; // "LYY2"
 // Phase 5 (spec §6.1): V3 = exact V2 88-byte prefix + trailing 32B lifecycle
 // commitment = 120 bytes. Purely additive; V1/V2 streams unchanged.
 static constexpr uint32_t LITENYX_AUX_MAGIC_V3 = 0x4C595933; // "LYY3"
+// Phase 7 (spec §4.4.1): V4 = V3 + 8-byte DrainCommitment (chainId +
+// drainStartHeight) = 128 bytes. Carries the block's drain declaration.
+static constexpr uint32_t LITENYX_AUX_MAGIC_V4 = 0x4C595934; // "LYY4"
 // Back-compat alias for existing call sites that predate V1/V2 versioning.
 static constexpr uint32_t LITENYX_AUX_MAGIC = LITENYX_AUX_MAGIC_V1;
 

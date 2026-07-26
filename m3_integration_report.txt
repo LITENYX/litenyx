@@ -1,0 +1,34 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-8.3.5, pluggy-1.5.0 -- /usr/bin/python3
+rootdir: /__w/litenyx/litenyx/tests/regtest
+collecting ... collected 3 items
+
+test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged FAILED [ 33%]
+test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once FAILED [ 66%]
+test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss PASSED   [100%]
+
+=================================== FAILURES ===================================
+_________________ test_g1_failed_connect_leaves_sss_unchanged __________________
+test_litenyx_m3_integration.py:154: in test_g1_failed_connect_leaves_sss_unchanged
+    node("testlitenyxforceflushfail", True)
+test_litenyx_m3_integration.py:98: in _rpc
+    raise RuntimeError("RPC %s failed: %s" % (method, r.stderr))
+E   RuntimeError: RPC testlitenyxforceflushfail failed: error code: -1
+E   error message:
+E   LITENYX-forceflushfail: JSON value is not an integer as expected
+__________________ test_g2_successful_connect_publishes_once ___________________
+test_litenyx_m3_integration.py:185: in test_g2_successful_connect_publishes_once
+    assert _sss_spent(node, (txid, 0)) is True, "G2: connected spend not visible after success"
+E   AssertionError: G2: connected spend not visible after success
+E   assert False is True
+E    +  where False = _sss_spent(<function node.<locals>._rpc at 0x7f72b0d92b80>, ('4ea5e483ce448177cd7eade05e773a2bd3a0da2c4ed7bf3d8f123e3d2be628db', 0))
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss
+FAILED test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged - RuntimeError: RPC testlitenyxforceflushfail failed: error code: -1
+error message:
+LITENYX-forceflushfail: JSON value is not an integer as expected
+FAILED test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once - AssertionError: G2: connected spend not visible after success
+assert False is True
+ +  where False = _sss_spent(<function node.<locals>._rpc at 0x7f72b0d92b80>, ('4ea5e483ce448177cd7eade05e773a2bd3a0da2c4ed7bf3d8f123e3d2be628db', 0))
+========================= 2 failed, 1 passed in 1.51s ==========================
