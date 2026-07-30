@@ -1,0 +1,30 @@
+// MSF Observational Adapter M05: Fork Budget (B_fork_i) - CE1 Phase 2 Repair
+//
+// Frozen SPEC-3: M05 = B_fork_i = k * V_i * (1 - rho_i), k = 3.0
+// Authority class: OBSERVATIONAL_ADAPTER
+
+#ifndef MSF_ADAPTER_M05_H
+#define MSF_ADAPTER_M05_H
+
+#include <string>
+#include "msf_scenario_engine.h"
+
+namespace msf {
+
+class AdapterM05 {
+public:
+    static std::string Compute(const BlockObservation& obs);
+    static std::string ComputeFromParams(const ScenarioParams& params);
+    static bool ValidateGolden(const std::string& computed, const std::string& expected);
+    static constexpr const char* MetricID() { return "M05"; }
+    static constexpr const char* MetricName() { return "Fork Budget (B_fork_i)"; }
+    static constexpr const char* AuthorityClass() { return "OBSERVATIONAL_ADAPTER"; }
+
+private:
+    static const int64_t Q32_32_SCALE = 0x100000000LL;
+    static std::string ToQ32_32(int64_t integer_part, int64_t fractional_part);
+    static int64_t MulQ32_32(int64_t a, int64_t b);
+};
+
+} // namespace msf
+#endif // MSF_ADAPTER_M05_H

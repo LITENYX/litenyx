@@ -1,0 +1,137 @@
+﻿[
+    {
+        "File":  "test_debug_bmin.cpp",
+        "DefinesModule":  0,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  0,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_debug_golden.cpp",
+        "DefinesModule":  0,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  0,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_icf1d_carrier.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  24,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_iw2_verifier.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  36,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  0,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_chainid_lifecycle.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  12,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_draining_authority.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  18,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_execution_authority.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  17,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_shared_delta.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  6,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_topology.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  5,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_topology_authority.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  22,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_litenyx_v3_carrier.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  5,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_security_floor_golden.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  1,
+        "AutoTestCases":  12,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_security_floor_standalone.cpp",
+        "DefinesModule":  0,
+        "IncludedRunner":  0,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  0,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    },
+    {
+        "File":  "test_work_adapter_eng1.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  49,
+        "FixtureTestCases":  0,
+        "DataTestCases":  0
+    }
+]

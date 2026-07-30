@@ -1,0 +1,51 @@
+﻿[
+    {
+        "File":  "test_litenyx_h1_iso.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  15
+    },
+    {
+        "File":  "test_litenyx_h1_m3.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  7
+    },
+    {
+        "File":  "test_litenyx_h1_m4.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  10
+    },
+    {
+        "File":  "test_litenyx_h1_pow_target.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  9
+    },
+    {
+        "File":  "test_litenyx_h1_shadow_sim.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  7
+    },
+    {
+        "File":  "test_litenyx_s1_mon_ontology.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  9
+    },
+    {
+        "File":  "test_litenyx_s1_replay.cpp",
+        "DefinesModule":  1,
+        "IncludedRunner":  1,
+        "UnitTestHeader":  0,
+        "AutoTestCases":  12
+    }
+]

@@ -22,7 +22,7 @@ BOOST_TEST ?= -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
 # Dogecoin Core v1.14.9 (INT-Q5 hard pin; see comment above for rationale)
 DOGECOIN_PIN ?= e0a1c157791544e818c901bd9341896965afbf9d
 
-KERRNYX_INCLUDES = -I$(REPO_ROOT) -I$(REPO_ROOT)/cpp_reference -I$(DOGECOIN_DIR)/src -I$(DOGECOIN_DIR)/src/config
+KERRNYX_INCLUDES = -I$(REPO_ROOT) -I$(REPO_ROOT)/cpp_reference -I$(REPO_ROOT)/harness/include -I$(DOGECOIN_DIR)/src -I$(DOGECOIN_DIR)/src/config
 KERRNYX_TEST_SRC = $(REPO_ROOT)/cpp_reference/test/test_litenyx.cpp
 KERRNYX_TEST_BIN = $(REPO_ROOT)/cpp_reference/test/test_litenyx
 KERRNYX_TOPO_SRC = $(REPO_ROOT)/cpp_reference/test/test_litenyx_topology.cpp
@@ -283,6 +283,88 @@ sf-test:
 		-lpthread $(BOOST_TEST) && \
 		echo "Running Phase 1 security floor golden vector tests..." && \
 		$(KERRNYX_SF_BIN) --log_level=test_suite
+
+# Run the Python regtest harness (Phase 1 gate: single-chain mine/transact/reorg).
+regtest-test:
+	@echo "Running Litenyx regtest harness (test_litenyx_splitmerge.py)..."
+	@cd $(REPO_ROOT)/tests/regtest && \
+		python3 -m pytest test_litenyx_splitmerge.py -v
+
+# MSF Evidence Manifest Verifier test (CE1 Phase 1.10)
+msf-evidence-verifier-test:
+	@echo "Compiling MSF Evidence Manifest Verifier test..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(REPO_ROOT)/harness/test/test_msf_evidence_manifest_verifier.cpp \
+		-o $(REPO_ROOT)/harness/test/test_msf_evidence_manifest_verifier \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running MSF Evidence Manifest Verifier test..." && \
+		$(REPO_ROOT)/harness/test/test_msf_evidence_manifest_verifier --log_level=test_suite
+
+# CANONICAL-EXECUTABLE-1 (CE1) build target
+ce1-build:
+	@echo "Building CANONICAL-EXECUTABLE-1..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(REPO_ROOT)/harness/src/msf_ce1_main.cpp \
+		$(REPO_ROOT)/harness/src/msf_scenario_engine.cpp \
+		$(REPO_ROOT)/harness/src/msf_replication_framework.cpp \
+		$(REPO_ROOT)/harness/src/msf_evidence_emission.cpp \
+		$(REPO_ROOT)/harness/src/msf_completeness.cpp \
+		$(REPO_ROOT)/harness/src/msf_dag_executor.cpp \
+		$(REPO_ROOT)/harness/src/msf_independent_verifier.cpp \
+		$(REPO_ROOT)/harness/src/msf_telemetry.cpp \
+		$(REPO_ROOT)/harness/src/msf_anti_gaming.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_registry.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m01.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m02.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m03.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m04.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m05.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m06.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m07.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m08.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m09.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m10.cpp \
+		$(REPO_ROOT)/harness/src/msf_evidence_manifest_verifier.cpp \
+		$(REPO_ROOT)/harness/src/harness_evidence.cpp \
+		$(REPO_ROOT)/harness/src/harness_dag.cpp \
+		$(REPO_ROOT)/harness/src/harness_authority.cpp \
+		$(REPO_ROOT)/harness/src/harness_worktree.cpp \
+		$(REPO_ROOT)/harness/src/harness_promotion.cpp \
+		-o $(REPO_ROOT)/harness/bin/msf_ce1 \
+		-lpthread -lssl -lcrypto && \
+		echo "CE1 build complete: harness/bin/msf_ce1"
+
+# Run the CE1 executable (build-only, no experiment execution)
+ce1-run: ce1-build
+	@echo "Running CE1 (build-only mode)..."
+	$(REPO_ROOT)/harness/bin/msf_ce1 --output-dir $(REPO_ROOT)/harness/evidence
+
+# Run CE1 synthetic tests
+ce1-test: ce1-build
+	@echo "Running CE1 synthetic tests..."
+	$(REPO_ROOT)/harness/bin/msf_ce1 --synthetic-tests
+
+# MSF Adapter tests (CE1 Phase 2)
+msf-adapter-test:
+	@echo "Compiling MSF Adapter tests..."
+	$(CXX) -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+		$(KERRNYX_INCLUDES) $(REPO_ROOT)/harness/test/test_msf_adapters.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m01.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m02.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m03.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m04.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m05.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m06.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m07.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m08.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m09.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_m10.cpp \
+		$(REPO_ROOT)/harness/src/msf_adapter_registry.cpp \
+		$(REPO_ROOT)/harness/src/msf_scenario_engine.cpp \
+		-o $(REPO_ROOT)/harness/test/test_msf_adapters \
+		-lpthread $(BOOST_TEST) && \
+		echo "Running MSF Adapter tests..." && \
+		$(REPO_ROOT)/harness/test/test_msf_adapters --log_level=test_suite
 
 # Run the Python regtest harness (Phase 1 gate: single-chain mine/transact/reorg).
 regtest-test:
