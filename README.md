@@ -1,70 +1,110 @@
 # Litenyx
 
-A clean-slate fork derived from **Dogecoin**, applying the protocol principles
-locked across prior experiments (KerrNyx, Veltrix, WaveCore). Litenyx is
-structured as a gradual, phased fork of Dogecoin rather than a from-scratch
-protocol, so that experimental mechanisms are introduced one at a time with
-explicit activation gates.
+Litenyx is the canonical **implementation repository** for the Litenyx research and protocol program. The project currently uses a Dogecoin-derived scientific-control track (DBET) to establish evidence before promoting experimental mechanisms into normative protocol work.
 
-## Guiding principle (locked)
+## Repository role
 
-```
-1 Blockchain + 1 Currency + 1 Global Monetary State + N Parallel Chains
-```
+This repository contains implementation source, harnesses, tests, adapters, build integration, CI, and implementation evidence.
 
-A transaction valid on one chain is valid on all chains. Chains differ only in
-acceptance parameters (fee rate, block size, block time), never in the shared
-UTXO universe or currency. This is a **shared-state multi-chain**, not a bridge
-and not per-chain ledgers.
+It does **not** independently define protocol authority. Normative boundaries live in `litenyx-spec`; execution planning lives in `litenyx-plan`; actual execution history lives in `litenyx-walkthrough`; provenance and discrepancy reconciliation are indexed by `Litenyx-oracle`.
 
-## Status
-
-| Track | Phase | Scope | Status |
-|-------|-------|-------|--------|
-| I | 0 | Protocol constitution (white paper + consensus spec) | in progress |
-| I | 1 | Clean Dogecoin fork (identity, magic, ports, genesis, AuxPoW) | planned |
-| II | 2 | Fixed two-chain shared-state consensus | next milestone |
-| II | 3 | Dynamic split/merge (N_t -> N_t+1) | future |
-| III | 4 | Dynamic block size | future |
-| III | 5 | Dynamic block reward | future |
-| IV | 6 | Negative supply shadow accounting | future |
-| IV | 7 | Dynamic wallet count / negative position | future |
-| IV | 8 | Unified controller simulation | future |
-| IV | 9 | Public network progression | future |
-
-## Repository layout
-
-```
-docs/                 Phase-0 constitution: white paper + consensus spec
-litenyx/              Consensus headers (header-only integer math where possible)
-cpp_reference/        Standalone C++ unit tests (no daemon link)
-deploy/               Fork-Makefile: clone Dogecoin, inject hooks, build, test
-tests/regtest/        Python regtest harness driving the daemon RPC
-.github/workflows/    CI (build + cpp-test + regtest)
+```text
+Spec: SHOULD / MUST
+        ↓
+Plan: WILL
+        ↓
+Implementation: CODE / HARNESS / TESTS
+        ↓
+Walkthrough: DID
+        ↓
+Oracle: EVIDENCE / MEANING / PROVENANCE
 ```
 
-## Consensus boundary (locked)
+## Current DBET checkpoint
 
-```
-ConsensusCore  !=  RuntimePolicy  !=  WalletPolicy
-```
+Current frontier:
 
-Experimental economic / wallet mechanisms must never contaminate basic
-consensus validation. Every feature carries one of four statuses:
-`LOCKED`, `EXPERIMENTAL`, `OPEN`, `FUTURE`.
-
-## Build & test
-
-See `deploy/Makefile`. CI runs build + `make cpp-test` + regtest on every push.
-
-## Immediate next milestone
-
-Fixed Multi-Chain Shared-State Consensus (Phase 2 substrate): prove that a
-wallet can spend the same globally-valid currency through either of two fixed
-parallel chains while guaranteeing
-
-```
-Spend(U, Chain_A) => NOT Spend(U, Chain_B)
+```text
+DBET-D0-HARNESS-COMPLETION-1
 ```
 
-for the same spendable state U. See `docs/litenyx_consensus_spec_v0.1.md`.
+Frozen behavioral-vector surface:
+
+```text
+V_D0(1) = 1,212 vectors
+```
+
+Current gate state:
+
+- D0 harness completion: **ACTIVE FRONTIER**
+- BV: **BLOCKED**
+- D1+: **BLOCKED**
+- Gate-1: **BLOCKED**
+
+No downstream DBET result may be claimed until its prerequisite gate is actually evidenced.
+
+## D0 scientific control
+
+`deploy/external/dogecoin` is the pristine pinned Dogecoin D0 upstream evidence source.
+
+D0 exists to provide a reproducible scientific control. Experimental Litenyx mechanisms must not silently contaminate D0.
+
+The promotion path is:
+
+```text
+D0 control
+  → Dn experiment
+  → verified evidence
+  → explicit graduation decision
+  → normative specification
+  → implementation
+```
+
+Experimental evidence does not promote itself into consensus.
+
+## Authority and anti-oscillation discipline
+
+Interpret project material proposition-by-proposition. Preserve evidence, but do not resurrect superseded conclusions because an older document says `LOCKED`, `FROZEN`, or `MANDATORY`.
+
+```text
+Authority status != historical evidence value != implementation existence
+```
+
+Implementation and tests prove only the path they actually exercise. A harness passing does not by itself establish production consensus enforcement.
+
+## Canonical workspace
+
+Canonical implementation root on the primary Windows workspace:
+
+```text
+C:\Users\sunilkr\New\Litenyx\Litenyx
+```
+
+The lowercase duplicate checkout is non-authoritative.
+
+## Engineering rule
+
+Before claiming a consensus feature is enforced, distinguish:
+
+```text
+Specified
+→ Implemented
+→ Compiled
+→ Tested
+→ Production-path exercised
+→ Verified
+→ Frozen
+```
+
+If implementation requires unresolved consensus semantics:
+
+> **STOP — SPECIFICATION REQUIRED**
+
+## Related repositories
+
+- `litenyx-spec` — normative boundaries, invariants, contracts, gate definitions
+- `litenyx-plan` — per-execution planning, sequencing, counters, next operation
+- `litenyx-walkthrough` — commands/actions actually executed and their results
+- `Litenyx-oracle` — provenance, reconciliation, evidence mapping, discrepancy analysis
+
+Historical white papers and superseded experiments remain useful provenance, not automatic current authority.
