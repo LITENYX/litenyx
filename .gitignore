@@ -34,3 +34,5 @@ docs/
 deploy/docs/
 *.white_paper.md
 
+"*.compile.err"  
+"*.compile.out"  
