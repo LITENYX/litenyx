@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-8.3.5, pluggy-1.5.0 -- /usr/bin/python3
+rootdir: /__w/litenyx/litenyx/tests/regtest
+collecting ... collected 3 items
+
+test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged PASSED [ 33%]
+test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once FAILED [ 66%]
+test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss FAILED   [100%]
+
+=================================== FAILURES ===================================
+__________________ test_g2_successful_connect_publishes_once ___________________
+test_litenyx_m3_integration.py:185: in test_g2_successful_connect_publishes_once
+    node("generatetoaddress", 1, addr)
+test_litenyx_m3_integration.py:95: in _rpc
+    raise _Dead("%s: daemon exited %s" % (method, proc.poll()))
+E   test_litenyx_m3_integration.node.<locals>._Dead: generatetoaddress: daemon exited -6
+_______________________ test_g3_disconnect_restores_sss ________________________
+test_litenyx_m3_integration.py:199: in test_g3_disconnect_restores_sss
+    before = _sss_spent(node, U)
+test_litenyx_m3_integration.py:137: in _sss_spent
+    q = rpc("testlitenyxsharedstate", "query", 0, _outpoints([spec]))
+test_litenyx_m3_integration.py:90: in _rpc
+    raise _Dead("%s: daemon exited %s" % (method, proc.poll()))
+E   test_litenyx_m3_integration.node.<locals>._Dead: testlitenyxsharedstate: daemon exited -6
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged
+FAILED test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once - test_litenyx_m3_integration.node.<locals>._Dead: generatetoaddress: daemon exited -6
+FAILED test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss - test_litenyx_m3_integration.node.<locals>._Dead: testlitenyxsharedstate: daemon exited -6
+========================= 2 failed, 1 passed in 1.86s ==========================

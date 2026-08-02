@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-8.3.5, pluggy-1.5.0 -- /usr/bin/python3
+rootdir: /__w/litenyx/litenyx/tests/regtest
+collecting ... collected 3 items
+
+test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged PASSED [ 33%]
+test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once FAILED [ 66%]
+test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss PASSED   [100%]
+
+=================================== FAILURES ===================================
+__________________ test_g2_successful_connect_publishes_once ___________________
+test_litenyx_m3_integration.py:188: in test_g2_successful_connect_publishes_once
+    assert _sss_spent(node, (txid, 0)) is True, "G2: connected spend not visible after success"
+E   AssertionError: G2: connected spend not visible after success
+E   assert False is True
+E    +  where False = _sss_spent(<function node.<locals>._rpc at 0x7f64e88739d0>, ('4ef7e5942f3d2fced7137922bfca5f15c130bed51fb954d917c6447966ebb75e', 0))
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged
+PASSED test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss
+FAILED test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once - AssertionError: G2: connected spend not visible after success
+assert False is True
+ +  where False = _sss_spent(<function node.<locals>._rpc at 0x7f64e88739d0>, ('4ef7e5942f3d2fced7137922bfca5f15c130bed51fb954d917c6447966ebb75e', 0))
+========================= 1 failed, 2 passed in 3.77s ==========================

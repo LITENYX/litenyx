@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-8.3.5, pluggy-1.5.0 -- /usr/bin/python3
+rootdir: /__w/litenyx/litenyx/tests/regtest
+collecting ... collected 3 items
+
+test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged PASSED [ 33%]
+test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once PASSED [ 66%]
+test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss PASSED   [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test_litenyx_m3_integration.py::test_g1_failed_connect_leaves_sss_unchanged
+PASSED test_litenyx_m3_integration.py::test_g2_successful_connect_publishes_once
+PASSED test_litenyx_m3_integration.py::test_g3_disconnect_restores_sss
+============================== 3 passed in 4.05s ===============================

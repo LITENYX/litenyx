@@ -62,18 +62,26 @@ struct LitenyxAuxHeader {
     // Only serialized/meaningful when IsV3(). See spec §6.1.
     uint256  lifecycleCommitment;
 
+    // Phase 7 (V4 layout): drain commitment. The block DECLARES which identity
+    // is entering settle-only mode. PRESENCE is structural (magic == V4), NOT a
+    // zero sentinel. Only serialized/meaningful when IsV4(). See spec §4.4.1.
+    uint32_t drainChainId;         // PersistentChainId subject to drain
+    uint32_t drainStartHeight;     // OBS_WINDOW-aligned boundary
+
     // --- Wire-format version predicates (spec §5.7 / §6.1) -------------------
     bool IsV1() const { return magic == LITENYX_AUX_MAGIC_V1; }
     bool IsV2() const { return magic == LITENYX_AUX_MAGIC_V2; }
     bool IsV3() const { return magic == LITENYX_AUX_MAGIC_V3; }
-    // Recognized Litenyx-aware format (V1, V2, or V3). Replaces the old
+    bool IsV4() const { return magic == LITENYX_AUX_MAGIC_V4; }
+    // Recognized Litenyx-aware format (V1, V2, V3, or V4). Replaces the old
     // single-magic notion; consensus code that gated on "is this a Litenyx
     // header" uses this.
-    bool HasKnownMagic() const { return IsV1() || IsV2() || IsV3(); }
+    bool HasKnownMagic() const { return IsV1() || IsV2() || IsV3() || IsV4(); }
 
     void SetMagicV1() { magic = LITENYX_AUX_MAGIC_V1; }
     void SetMagicV2() { magic = LITENYX_AUX_MAGIC_V2; }
     void SetMagicV3() { magic = LITENYX_AUX_MAGIC_V3; }
+    void SetMagicV4() { magic = LITENYX_AUX_MAGIC_V4; }
     // Deprecated spelling retained for existing Phase 2/3 call sites: sets V1.
     void SetMagic() { magic = LITENYX_AUX_MAGIC_V1; }
     // Deprecated spelling retained for existing Phase 2/3 call sites: recognizes
@@ -89,17 +97,24 @@ struct LitenyxAuxHeader {
         reserved = 0;
         topologyCommitment = uint256();
         lifecycleCommitment = uint256();
+        drainChainId = 0;
+        drainStartHeight = 0;
     }
 
-    // Phase 4/5 accessor: a topology commitment is STRUCTURALLY present iff the
-    // header is V2 OR V3 (V3's 88-byte prefix carries the exact V2 field, spec
+    // Phase 4/5/7 accessor: a topology commitment is STRUCTURALLY present iff the
+    // header is V2, V3, or V4 (V3/V4's prefix carries the exact V2 field, spec
     // §6.1). A header with an all-zero commitment is PRESENT (it will simply
     // fail comparison unless zero is the expected hash).
-    bool HasTopologyCommitment() const { return IsV2() || IsV3(); }
+    bool HasTopologyCommitment() const { return IsV2() || IsV3() || IsV4(); }
 
-    // Phase 5 accessor: a lifecycle commitment is STRUCTURALLY present iff the
-    // header is V3 (spec §6.1), mirroring the topology presence ruling.
-    bool HasLifecycleCommitment() const { return IsV3(); }
+    // Phase 5/7 accessor: a lifecycle commitment is STRUCTURALLY present iff the
+    // header is V3 or V4 (spec §6.1 / §4.4.1), mirroring the topology presence
+    // ruling.
+    bool HasLifecycleCommitment() const { return IsV3() || IsV4(); }
+
+    // Phase 7 accessor: a drain commitment is STRUCTURALLY present iff the
+    // header is V4 (spec §4.4.1).
+    bool HasDrainCommitment() const { return IsV4(); }
 
 #ifndef KERRNYX_STANDALONE_TEST
     ADD_SERIALIZE_METHODS;
@@ -112,16 +127,22 @@ struct LitenyxAuxHeader {
         READWRITE(auxAnchor);
         READWRITE(splitVector);
         READWRITE(reserved);
-        // V2/V3 trailing field. magic is read first, so the parser knows the
+        // V2/V3/V4 trailing field. magic is read first, so the parser knows the
         // exact byte-width of nyx_aux before decoding subsequent block fields.
         // V0/V1 streams carry NO topology bytes (byte-identical to Phase 2/3).
         // V3 carries the EXACT V2 88-byte prefix (topologyCommitment included),
         // then appends lifecycleCommitment -> 120 bytes total (spec §6.1).
-        if (magic == LITENYX_AUX_MAGIC_V2 || magic == LITENYX_AUX_MAGIC_V3) {
+        // V4 carries the EXACT V3 120-byte prefix, then appends the 8-byte
+        // DrainCommitment (chainId + drainStartHeight) -> 128 bytes (spec §4.4.1).
+        if (magic == LITENYX_AUX_MAGIC_V2 || magic == LITENYX_AUX_MAGIC_V3 || magic == LITENYX_AUX_MAGIC_V4) {
             READWRITE(topologyCommitment);
         }
-        if (magic == LITENYX_AUX_MAGIC_V3) {
+        if (magic == LITENYX_AUX_MAGIC_V3 || magic == LITENYX_AUX_MAGIC_V4) {
             READWRITE(lifecycleCommitment);
+        }
+        if (magic == LITENYX_AUX_MAGIC_V4) {
+            READWRITE(drainChainId);
+            READWRITE(drainStartHeight);
         }
     }
 #endif

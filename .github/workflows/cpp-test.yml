@@ -1,0 +1,148 @@
+name: C++ Test Suite
+
+on:
+  push:
+    branches: [main, phase7-draining-authority]
+  pull_request:
+    branches: [main]
+
+jobs:
+  standalone-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make libboost-test-dev
+
+      - name: Record environment
+        run: |
+          echo "=== CI ENVIRONMENT ===" > ci-evidence.txt
+          echo "Runner: $(uname -a)" >> ci-evidence.txt
+          echo "G++: $(g++ --version | head -1)" >> ci-evidence.txt
+          echo "Make: $(make --version | head -1)" >> ci-evidence.txt
+          echo "Boost: $(dpkg -l | grep libboost-test | awk '{print $3}')" >> ci-evidence.txt
+          echo "Commit: ${{ github.sha }}" >> ci-evidence.txt
+          echo "Branch: ${{ github.ref_name }}" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "======================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Run Phase 2 consensus tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx consensus unit test (Phase 2)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx.cpp \
+            -o ../cpp_reference/test/test_litenyx \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx
+          echo "Phase 2: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 3 topology tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx topology unit test (Phase 3)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_topology.cpp \
+            -o ../cpp_reference/test/test_litenyx_topology \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_topology
+          echo "Phase 3: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 4A topology authority tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx topology authority unit test (Phase 4A)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_topology_authority.cpp \
+            -o ../cpp_reference/test/test_litenyx_topology_authority \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_topology_authority
+          echo "Phase 4A: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 5 ChainId lifecycle tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx ChainId lifecycle unit test (Phase 5)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_chainid_lifecycle.cpp \
+            -o ../cpp_reference/test/test_litenyx_chainid_lifecycle \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_chainid_lifecycle
+          echo "Phase 5 ChainId: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 5 V3 carrier tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx V3 carrier unit test (Phase 5)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_v3_carrier.cpp \
+            -o ../cpp_reference/test/test_litenyx_v3_carrier \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_v3_carrier
+          echo "Phase 5 V3: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 6 execution authority tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx execution authority unit test (Phase 6)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_execution_authority.cpp \
+            -o ../cpp_reference/test/test_litenyx_execution_authority \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_execution_authority
+          echo "Phase 6: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 7 draining authority tests
+        run: |
+          cd deploy
+          echo "Compiling Litenyx draining authority unit test (Phase 7)..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_litenyx_draining_authority.cpp \
+            -o ../cpp_reference/test/test_litenyx_draining_authority \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_litenyx_draining_authority
+          echo "Phase 7: PASS" >> ../ci-evidence.txt
+
+      - name: Run Phase 1 security floor golden vector tests
+        run: |
+          cd deploy
+          echo "Compiling Phase 1 security floor golden vector tests..."
+          g++ -std=c++20 -O0 -DKERRNYX_STANDALONE_TEST \
+            -I.. -I../cpp_reference \
+            ../cpp_reference/test/test_security_floor_golden.cpp \
+            -o ../cpp_reference/test/test_security_floor_golden \
+            -lpthread -DBOOST_TEST_DYN_LINK -lboost_unit_test_framework
+          ../cpp_reference/test/test_security_floor_golden --log_level=test_suite
+          echo "Phase 1: PASS" >> ../ci-evidence.txt
+
+      - name: Record results
+        if: always()
+        run: |
+          echo "=== CI RESULTS ===" >> ci-evidence.txt
+          echo "Exit code: $?" >> ci-evidence.txt
+          echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.txt
+          echo "===================" >> ci-evidence.txt
+          cat ci-evidence.txt
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-evidence-${{ github.sha }}
+          path: |
+            ci-evidence.txt
+          retention-days: 90
