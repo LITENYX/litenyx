@@ -30,7 +30,9 @@ __pycache__/
 *.pyc
 
 # Internal documentation — not published to GitHub
-docs/
+# Sole tracked exception: docs/CURRENT_AUTHORITY.md (public authority notice; referenced by AGENT.md and MSF records)
+docs/*
+!docs/CURRENT_AUTHORITY.md
 deploy/docs/
 *.white_paper.md
 
