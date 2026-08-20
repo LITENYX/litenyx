@@ -57,7 +57,7 @@ inline LitenyxChainIdActivation LitenyxDrainActivationRegtest() {
     return LitenyxChainIdActivation(1000, 1200);
 }
 inline LitenyxChainIdActivation LitenyxDrainActivationTestnet() {
-    return LitenyxChainIdActivation(8000, 10000);
+    return LitenyxChainIdActivation(6800000, 7000000);
 }
 inline LitenyxChainIdActivation LitenyxDrainActivationMainnet() {
     return LitenyxChainIdActivation(LITENYX_DRAIN_ACTIVATION_DISABLED,

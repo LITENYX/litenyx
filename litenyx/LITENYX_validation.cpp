@@ -14,6 +14,7 @@
 #include <vector>
 
 bool LitenyxCheckAuxHeader(const CBlock& block, const CBlockIndex* pindexPrev,
+                           const std::string& netId,
                            CValidationState& state)
 {
     const LitenyxAuxHeader& aux = block.nyx_aux;
@@ -21,7 +22,7 @@ bool LitenyxCheckAuxHeader(const CBlock& block, const CBlockIndex* pindexPrev,
     // Before shared-state activation the chain behaves as plain Dogecoin:
     // aux extension is optional and unvalidated.
     int nHeight = pindexPrev ? pindexPrev->nHeight + 1 : 0;
-    if (nHeight < LITENYX_SHARED_STATE_HEIGHT) {
+    if (nHeight < LitenyxSharedStateHeightForNetwork(netId)) {
         return true;
     }
 

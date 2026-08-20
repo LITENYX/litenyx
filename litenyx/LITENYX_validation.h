@@ -22,6 +22,7 @@ namespace Consensus { struct Params; }
 // active at this height, in which case aux is ignored). On rejection, sets
 // `state` and returns false.
 bool LitenyxCheckAuxHeader(const CBlock& block, const CBlockIndex* pindexPrev,
+                           const std::string& netId,
                            CValidationState& state);
 
 // Record every input of every non-coinbase transaction in `block` into the
