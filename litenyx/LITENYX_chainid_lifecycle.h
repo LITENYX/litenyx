@@ -70,7 +70,7 @@ inline LitenyxChainIdActivation LitenyxChainIdActivationRegtest() {
     return LitenyxChainIdActivation(200, 400);
 }
 inline LitenyxChainIdActivation LitenyxChainIdActivationTestnet() {
-    return LitenyxChainIdActivation(1000, 3000);
+    return LitenyxChainIdActivation(6200000, 6400000);
 }
 inline LitenyxChainIdActivation LitenyxChainIdActivationMainnet() {
     return LitenyxChainIdActivation(LITENYX_CHAINID_ACTIVATION_DISABLED,

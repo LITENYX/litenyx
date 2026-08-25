@@ -4,6 +4,9 @@ on:
   push:
     branches: [main, phase7-draining-authority]
 
+concurrency:
+  group: gv-${{ github.ref }}
+
 jobs:
   golden-vectors:
     runs-on: ubuntu-latest

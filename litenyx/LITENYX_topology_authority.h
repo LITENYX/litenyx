@@ -96,7 +96,7 @@ struct LitenyxTopoActivation {
 
 // Concrete per-network activations (spec §8.2, FROZEN for Phase 4).
 inline LitenyxTopoActivation LitenyxTopoActivationRegtest() { return LitenyxTopoActivation{100, 300}; }
-inline LitenyxTopoActivation LitenyxTopoActivationTestnet() { return LitenyxTopoActivation{500, 1500}; }
+inline LitenyxTopoActivation LitenyxTopoActivationTestnet() { return LitenyxTopoActivation{6050000, 6150000}; }
 inline LitenyxTopoActivation LitenyxTopoActivationMainnet() {
     return LitenyxTopoActivation{LITENYX_TOPO_ACTIVATION_DISABLED,
                                  LITENYX_TOPO_ACTIVATION_DISABLED};

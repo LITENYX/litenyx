@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(enforcement_network_selector)
 {
     BOOST_CHECK(LitenyxTopoActivationForNetwork("regtest").RegimeAt(300) == LitenyxTopoRegime::HardAuthority);
     BOOST_CHECK(LitenyxTopoActivationForNetwork("test").RegimeAt(300) == LitenyxTopoRegime::PreDerivation);
-    BOOST_CHECK(LitenyxTopoActivationForNetwork("test").RegimeAt(1500) == LitenyxTopoRegime::HardAuthority);
+    BOOST_CHECK(LitenyxTopoActivationForNetwork("test").RegimeAt(6150000) == LitenyxTopoRegime::HardAuthority);
     BOOST_CHECK(LitenyxTopoActivationForNetwork("main").IsDisabled());
     BOOST_CHECK(LitenyxTopoActivationForNetwork("unknown-net").IsDisabled()); // fail dormant
 }
@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE(activation_regimes_and_disabled)
     BOOST_CHECK(tn.IsValid());
     BOOST_CHECK(!tn.IsDisabled());
     BOOST_CHECK_EQUAL((int)tn.RegimeAt(499),  (int)LitenyxTopoRegime::PreDerivation);
-    BOOST_CHECK_EQUAL((int)tn.RegimeAt(1500), (int)LitenyxTopoRegime::HardAuthority);
+    BOOST_CHECK_EQUAL((int)tn.RegimeAt(6150000), (int)LitenyxTopoRegime::HardAuthority);
 
     // Mainnet DISABLED: every height is Pre-derivation; never reaches hard.
     LitenyxTopoActivation mn = LitenyxTopoActivationMainnet();

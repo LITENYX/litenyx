@@ -74,9 +74,10 @@ help:
 
 clone-dogecoin:
 	@if [ -d "$(DOGECOIN_DIR)/.git" ]; then \
-		echo "Dogecoin clone already present; verifying INT-Q5 pin..."; \
+		echo "Dogecoin clone already present; cleaning working tree + verifying INT-Q5 pin..."; \
 		cd $(DOGECOIN_DIR) && git fetch --tags --depth 1 origin $(DOGECOIN_PIN); \
 		git -C $(DOGECOIN_DIR) checkout -q $(DOGECOIN_PIN) || git -C $(DOGECOIN_DIR) checkout -q tags/v1.14.9; \
+		git -C $(DOGECOIN_DIR) checkout -- . && git -C $(DOGECOIN_DIR) clean -fd; \
 	else \
 		echo "Cloning Dogecoin (pinned INT-Q5: $(DOGECOIN_PIN))..."; \
 		git clone --filter=blob:none --no-checkout https://github.com/dogecoin/dogecoin.git $(DOGECOIN_DIR); \

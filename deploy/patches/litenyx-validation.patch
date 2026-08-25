@@ -61,7 +61,7 @@ index a054136..6b14b91 100644
 +    // Litenyx Phase 2: validate the aux header (chainId lane + same-chain anchor)
 +    // then enforce the global shared spent-set across all chains. A cross-chain
 +    // double spend (same outpoint on a different chainId) is rejected here.
-+    if (!LitenyxCheckAuxHeader(block, pindex->pprev, state)) {
++    if (!LitenyxCheckAuxHeader(block, pindex->pprev, Params().NetworkIDString(), state)) {
 +        return false;
 +    }
 +    if (!LitenyxConnectSharedState(block, state)) {
