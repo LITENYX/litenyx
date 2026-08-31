@@ -110,6 +110,56 @@ void LitenyxDisconnectSharedState(const CBlock& block)
     }
 }
 
+// SSS-REHYDRATION-CONTRACT-v0.2 (dedicated lean SSS walker).
+//
+// Deterministic reconstruction of the live LitenyxSharedSpendSet from canonical
+// chain history. MUST be called with cs_main held (the startup path guarantees
+// this). See LITENYX_validation.h for the full contracted semantics.
+//
+// Bit-equality argument: live Connect/Disconnect mutate the singleton by exactly
+// the spends each canonical block introduces (LitenyxConnectSharedState /
+// LitenyxDisconnectSharedState). Replaying the same canonical blocks
+// height-ascending through RecordSpend therefore reconstructs the identical
+// set for the same tip — provided the set starts empty (Reset below) and the
+// required block bodies are all readable. No script/UTXO validation is run; the
+// walk is a spend-extraction subset of IBD, linear in total historical inputs.
+bool LitenyxRehydrateSharedSpendSet(const Consensus::Params& consensus)
+{
+    // Reset FIRST (see header: the startup VerifyDB window may already have
+    // partially populated the singleton via ConnectBlock). Replay from a clean
+    // slate is required for the frozen bit-equality invariant.
+    LitenyxSharedSpendSet::Instance().Reset();
+
+    const CChain& chain = ::chainActive;
+    const int nTipHeight = chain.Height();
+    if (nTipHeight < 0) {
+        return true; // no chain (cannot happen at phase-7, but be safe)
+    }
+
+    // Height-ascending walk pindexTip -> genesis. Each index is on the ACTIVE
+    // canonical chain by construction of CChain.
+    for (int h = 0; h <= nTipHeight; ++h) {
+        const CBlockIndex* pindex = chain[h];
+        if (pindex == nullptr) {
+            return false; // invariant violation: active chain gap is unrecoverable
+        }
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, consensus)) {
+            // Missing/pruned required block body => cannot reconstruct
+            // authoritatively => fail closed (contract §"missing bodies").
+            return false;
+        }
+        const uint8_t nChainId = block.nyx_aux.chainId;
+        for (const CTransactionRef& tx : block.vtx) {
+            if (tx->IsCoinBase()) continue;
+            for (const CTxIn& txin : tx->vin) {
+                LitenyxRecordSharedSpend(txin.prevout.hash, txin.prevout.n, nChainId);
+            }
+        }
+    }
+    return true;
+}
+
 // ---- Phase 4B(4): topology-commitment enforcement (spec §5.7/§9) -----------
 
 namespace {
