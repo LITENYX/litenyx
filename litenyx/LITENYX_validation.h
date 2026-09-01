@@ -115,4 +115,32 @@ bool LitenyxCheckExecutionAuthority(const CBlock& block,
                                     const Consensus::Params& consensus,
                                     CValidationState& state);
 
+// SSS-REHYDRATION-CONTRACT-v0.2: deterministic reconstruction of the
+// LitenyxSharedSpendSet (SSS) on daemon restart, by REPLAY of canonical chain
+// history (derivation), NOT serialization. No second persistence authority for
+// consensus state is introduced. This is a narrow, dedicated SSS walker that
+// deliberately does NOT overload LitenyxBuildCanonicalBlocks() (which computes
+// the phase-4/5/6 commitment sequences and must keep that contract stable).
+//
+// Semantics (contracted, v0.2):
+//   * REQUIRES cs_main held (caller holds it; startup single-threaded).
+//   * RESETS the live SSS first (required: the startup VerifyDB window may
+//     already have exercised the patched ConnectBlock, so replay without
+//     clearing that partial state would not establish frozen bit-equality).
+//   * Walks the ACTIVE canonical chain height-ascending pindexTip->genesis,
+//     ReadBlockFromDisk for each body, skips coinbase, and replays every
+//     non-coinbase tx.vin.prevout through LitenyxRecordSharedSpend() under
+//     block.nyx_aux.chainId.
+//   * FAILS CLOSED: if any required block body cannot be read from disk, returns
+//     false (readiness must not be granted); contract §"missing bodies".
+//   * Purity (Invariant 0): does NOT alter canonical-chain state, UTXO state,
+//     block index state, or chain selection — SSS derivation exclusively.
+//   * No serialization, no checkpointing, no pruning-policy invention.
+//
+// On success the live SSS is bit-equal to what live Connect/Disconnect would
+// have produced for the same canonical tip. On failure the caller must refuse
+// node readiness via InitError (fail-closed) — see deploy/patches/
+// litenyx-rehydrate.patch.
+bool LitenyxRehydrateSharedSpendSet(const Consensus::Params& consensus);
+
 #endif // LITENYX_VALIDATION_H

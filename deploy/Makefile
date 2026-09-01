@@ -104,7 +104,7 @@ inject-hooks: clone-dogecoin
 	@cp $(REPO_ROOT)/litenyx/LITENYX_topology_tracker.h $(DOGECOIN_DIR)/src/litenyx/LITENYX_topology_tracker.h
 	@cp $(REPO_ROOT)/litenyx/LITENYX_topology_tracker.cpp $(DOGECOIN_DIR)/src/litenyx/LITENYX_topology_tracker.cpp
 	@echo "Applying litenyx patches (mandatory: any failure is fatal)..."
-	@for p in identity block-aux validation rpc makefile; do \
+	@for p in identity block-aux validation rpc makefile rehydrate; do \
 		PATCH=$(REPO_ROOT)/deploy/patches/litenyx-$$p.patch; \
 		if git -C $(DOGECOIN_DIR) apply --check $$PATCH >/dev/null 2>&1; then \
 			git -C $(DOGECOIN_DIR) apply $$PATCH \
@@ -372,6 +372,47 @@ regtest-test:
 	@echo "Running Litenyx regtest harness (test_litenyx_splitmerge.py)..."
 	@cd $(REPO_ROOT)/tests/regtest && \
 		python3 -m pytest test_litenyx_splitmerge.py -v
+
+# SSS-REHYDRATION-CONTRACT-v0.2 integration gate (RE2/RE3 rehydration proof).
+# Fail-closed, dedicated gate. NEVER overlapped with m3-integration (G1-G3) or
+# regtest-test (split/merge): the cold-restart test proves a DISTINCT invariant:
+#   SSS_live_before_stop == SSS_rehydrated_after_restart
+# via REPLAY of canonical chain history (derivation), not serialization.
+# Pipeline: pin e0a1c157 -> inject-hooks (includes litenyx-rehydrate.patch,
+# which wires LitenyxRehydrateSharedSpendSet into AppInitMain end-of-Phase-7)
+# -> production-build-debug (NO -DNDEBUG; rehydration runs in every build) ->
+# test_litenyx_cold_restart.py. SKIP or FAIL => gate fails.
+sss-rehydration-test: production-build-debug
+	@echo "=== SSS REHYDRATION INTEGRATION GATE (fail-closed, CONTRACT-v0.2) ==="
+	@echo "[1/4] Pin check: HEAD == $(DOGECOIN_PIN)"
+	@test "$(shell git -C $(DOGECOIN_DIR) rev-parse HEAD)" = "$(DOGECOIN_PIN)" || \
+		{ echo "FATAL: pin mismatch"; exit 1; }
+	@echo "[2/4] litenyx sources injected (incl. LITENYX_validation with rehydrate decl):"
+	@test -f $(DOGECOIN_DIR)/src/litenyx/LITENYX_validation.h || \
+		{ echo "FATAL: LITENYX_validation.h not injected"; exit 1; }
+	@echo "[3/4] Debug daemon present:"
+	@test -x $(DOGECOIN_DIR)/src/dogecoind || { echo "FATAL: dogecoind missing"; exit 1; }
+	@echo "[4/4] Cold-restart regtest (SKIP or FAIL => gate fails):"
+	@cd $(REPO_ROOT)/tests/regtest && \
+		LITENYXD_BIN=$(DOGECOIN_DIR)/src/dogecoind \
+		LITENYX_CLI_BIN=$(DOGECOIN_DIR)/src/dogecoin-cli \
+		python3 -m pytest test_litenyx_cold_restart.py -v -p no:cacheprovider \
+			--tb=short -rA > /tmp/sss_rehydration_report.txt 2>&1; \
+		status=$$? ; \
+		cat /tmp/sss_rehydration_report.txt ; \
+		if [ $$status -ne 0 ]; then \
+			echo "=== DAEMON STDERR DUMPS ===" ; \
+			for f in /tmp/Litenyx-ColdRestart-*/dogecoind*.stderr.log ; do \
+				if [ -f "$$f" ]; then echo "--- $$f ---"; cat "$$f"; fi ; \
+			done ; \
+			echo "=== END DAEMON STDERR DUMPS ===" ; \
+			echo "FATAL: SSS rehydration suite failed (rc=$$status)"; exit 1; \
+		fi ; \
+		if grep -qiE "skipped|[0-9]+ skipped" /tmp/sss_rehydration_report.txt; then \
+			echo "FATAL: SSS rehydration suite reports SKIPPED tests; a skipped R1/R2 is NOT success."; exit 1; \
+		fi ; \
+		echo "OK: SSS rehydration suite passed (no skips, no failures)."
+	@echo "=== VERDICT: RE2 && RE3 = PASS -> SSS rehydration = DAEMON-VERIFIED ==="
 
 # Alias to run both standalone cpp tests and the regtest harness.
 test-all: cpp-test regtest-test

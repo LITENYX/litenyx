@@ -1,0 +1,44 @@
+diff --git a/src/init.cpp b/src/init.cpp
+index dcb3415..2a938aa 100644
+--- a/src/init.cpp
++++ b/src/init.cpp
+@@ -31,6 +31,7 @@
+ #include "rpc/register.h"
+ #include "script/standard.h"
+ #include "script/sigcache.h"
++#include "litenyx/LITENYX_validation.h"
+ #include "scheduler.h"
+ #include "timedata.h"
+ #include "txdb.h"
+@@ -1602,6 +1603,31 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+         mempool.ReadFeeEstimates(est_filein);
+     fFeeEstimatesInitialized = true;
+ 
++    // Litenyx SSS-REHYDRATION-CONTRACT-v0.2: deterministically reconstruct the
++    // global LitenyxSharedSpendSet (SSS) from canonical chain history by REPLAY
++    // (derivation), via the dedicated lean walker LitenyxRehydrateSharedSpendSet.
++    //
++    // Placement: end of Phase 7 — AFTER the block index and canonical chain are
++    // fully loaded (chainActive is populated, cs_main is quiescent) and BEFORE
++    // Step 8 (wallet load) / RPC warmup-finished. Thus rehydration completes
++    // before any state query or new connect is served (contract read-ordering).
++    //
++    // Locking: the walk reads every canonical block and mutates the live SSS
++    // through LitenyxRecordSharedSpend (which owns the singleton mutex). We hold
++    // cs_main for the whole replay so the canonical chain is frozen while we
++    // derive the set (no concurrent ActivateBestChain/VerifyDB mutation).
++    //
++    // Fail-closed: any required block body that cannot be read from disk aborts
++    // startup via InitError — readiness is NOT granted (contract §missing
++    // bodies). No serialization, no checkpointing, no pruning-policy invention.
++    {
++        LOCK(cs_main);
++        if (!LitenyxRehydrateSharedSpendSet(chainparams.GetConsensus(chainActive.Height()))) {
++            return InitError(_("Litenyx shared spent set rehydration failed; "
++                               "required block history unavailable (fail-closed)."));
++        }
++    }
++
+     // ********************************************************* Step 8: load wallet
+ #ifdef ENABLE_WALLET
+     if (!CWallet::InitLoadWallet())
